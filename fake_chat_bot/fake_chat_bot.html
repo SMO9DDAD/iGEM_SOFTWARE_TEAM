@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OïdiSense Expert — iGEM URV 2025</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f4f4f4;
+    font-family: Georgia, 'Times New Roman', serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  .chat-wrapper {
+    width: 100%;
+    max-width: 680px;
+    border: 1px solid #aaa;
+    background: #fff;
+  }
+
+  .chat-header {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 1.2rem 1.4rem;
+    border-bottom: 2px solid #000;
+  }
+
+  .capcalera-top {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .avatar-agent { font-size: 1.8rem; line-height: 1; }
+
+  .info-agent h1 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+  }
+
+  .info-agent .subtitol {
+    font-size: 0.65rem;
+    color: #aaa;
+    font-family: monospace;
+    margin-top: 0.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .etiqueta {
+    padding: 0.15rem 0.5rem;
+    border: 1px solid #555;
+    font-size: 0.58rem;
+    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #ccc;
+  }
+
+  .temes-rapids {
+    background: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .etiqueta-temes {
+    font-size: 0.6rem;
+    font-family: monospace;
+    text-transform: uppercase;
+    color: #888;
+    white-space: nowrap;
+  }
+
+  .boto-tema {
+    padding: 0.2rem 0.6rem;
+    background: #fff;
+    border: 1px solid #bbb;
+    font-family: Georgia, serif;
+    font-size: 0.7rem;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+
+  .boto-tema:hover { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+  .zona-missatges {
+    background: #fff;
+    padding: 1.2rem;
+    height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    scroll-behavior: smooth;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .zona-missatges::-webkit-scrollbar { width: 5px; }
+  .zona-missatges::-webkit-scrollbar-track { background: #f4f4f4; }
+  .zona-missatges::-webkit-scrollbar-thumb { background: #bbb; }
+
+  .missatge {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    animation: entrada 0.25s ease both;
+  }
+
+  @keyframes entrada {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .missatge.usuari { flex-direction: row-reverse; }
+
+  .avatar-missatge { font-size: 1.2rem; flex-shrink: 0; margin-top: 4px; line-height: 1; }
+
+  .bombolla {
+    max-width: 82%;
+    padding: 0.75rem 1rem;
+    font-size: 0.83rem;
+    line-height: 1.65;
+    color: #1a1a1a;
+  }
+
+  .missatge.bot .bombolla {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-left: 3px solid #1a1a1a;
+  }
+
+  .missatge.usuari .bombolla {
+    background: #1a1a1a;
+    color: #f4f4f4;
+    border: 1px solid #000;
+  }
+
+  .bombolla strong {
+    display: block;
+    font-size: 0.88rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.4rem;
+  }
+
+  .bombolla em.terme {
+    font-style: italic;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+  }
+
+  .bombolla .destacat {
+    background: #f0f0f0;
+    border-left: 3px solid #888;
+    padding: 0.5rem 0.7rem;
+    margin-top: 0.7rem;
+    font-size: 0.78rem;
+    color: #444;
+    font-style: italic;
+  }
+
+  .fila-suggeriments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.7rem;
+  }
+
+  .boto-suggeriment {
+    padding: 0.2rem 0.6rem;
+    background: #fff;
+    border: 1px solid #bbb;
+    font-size: 0.68rem;
+    color: #333;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    transition: background 0.15s;
+  }
+
+  .boto-suggeriment:hover { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+  .punts-escrivint {
+    display: flex;
+    gap: 4px;
+    padding: 0.75rem 1rem;
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-left: 3px solid #1a1a1a;
+    align-items: center;
+    width: fit-content;
+  }
+
+  .punts-escrivint span {
+    width: 6px; height: 6px;
+    background: #bbb;
+    border-radius: 50%;
+    animation: bot 1.2s ease-in-out infinite;
+  }
+
+  .punts-escrivint span:nth-child(2) { animation-delay: 0.2s; }
+  .punts-escrivint span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bot {
+    0%, 60%, 100% { transform: translateY(0); background: #bbb; }
+    30% { transform: translateY(-5px); background: #555; }
+  }
+
+  .zona-escriptura {
+    background: #f8f8f8;
+    padding: 0.8rem 1rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  .camp-text {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #bbb;
+    padding: 0.6rem 0.9rem;
+    font-family: Georgia, serif;
+    font-size: 0.82rem;
+    color: #1a1a1a;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .camp-text:focus { border-color: #1a1a1a; }
+  .camp-text::placeholder { color: #aaa; }
+
+  .boto-enviar {
+    padding: 0.6rem 1.1rem;
+    background: #1a1a1a;
+    border: none;
+    color: #fff;
+    font-family: Georgia, serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+
+  .boto-enviar:hover { background: #444; }
+  .boto-enviar:active { background: #000; }
+
+  @media (max-width: 500px) {
+    .zona-missatges { height: 340px; }
+    .temes-rapids { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-wrapper">
+  <div class="chat-header">
+    <div class="capcalera-top">
+      <div class="avatar-agent"></div>
+      <div class="info-agent">
+        <h1>OïdiSense Expert</h1>
+        <div class="subtitol">iGEM URV 2025 · Biosensor · Erysiphe necator</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="temes-rapids">
+    <span class="etiqueta-temes">Topics →</span>
+    <button class="boto-tema" onclick="preguntaRapida('com funciona el biosensor')">How does it work?</button>
+    <button class="boto-tema" onclick="preguntaRapida('oïdi erysiphe cendrosa')">Powdery Mildew</button>
+    <button class="boto-tema" onclick="preguntaRapida('proteïnes OBP receptor')">OBP Proteins</button>
+    <button class="boto-tema" onclick="preguntaRapida('impacte econòmic collita vi')">Economic Impact</button>
+    <button class="boto-tema" onclick="preguntaRapida('compostos volàtils fong')">Volatiles</button>
+    <button class="boto-tema" onclick="preguntaRapida('canvi climàtic temperatura')">Climate</button>
+  </div>
+
+  <div class="zona-missatges" id="missatges"></div>
+
+  <div class="zona-escriptura">
+    <input
+      type="text"
+      class="camp-text"
+      id="campText"
+      placeholder="Ask about the biosensor, powdery mildew, viticulture..."
+      autocomplete="off"
+    />
+    <button class="boto-enviar" onclick="enviarMissatge()">Send →</button>
+  </div>
+</div>
+
+<script>
+
+const baseDades = [
+  {
+    paraules: ["oïdi","erysiphe","necator","cendrosa","fong","malaltia","patogen","mildiu","espora","fungi","cep","vinya"],
+    titol: "Erysiphe necator (Powdery Mildew)",
+    cos: "The <b>Erysiphe necator</b>, commonly known as <em class='terme'>powdery mildew</em>, is the most persistent fungal pathogen in Mediterranean viticulture. Unlike downy mildew, it does not depend on rain: it only needs ambient humidity and moderate temperatures (15–28°C) to spread. Powdery mildew can destroy 100% of a harvest in severe attacks and contaminates grapes with volatile compounds that render them unsuitable for quality wine production.",
+    destacat: "It sporulates without rain, forms white powdery colonies on green tissues, and survives winter as cleistothecia on the vine shoots.",
+    suggeriments: ["volatile compounds fungus","fungicide resistance sulphur","climate change temperature"]
+  },
+  {
+    paraules: ["biosensor","sensor","detecció","detectar","dispositiu","nas","electrònic","com","funciona","funcionament","mecanisme","principi","explica","sistema","tecnologia","opera","treballa"],
+    titol: "The Biosensor: How It Works",
+    cos: "Our biosensor acts as a <b>biological electronic nose</b>. It integrates odour-binding proteins (<em class='terme'>OBPs</em>) into an electrochemical transducer. When powdery mildew begins to infect the vine, it releases specific volatile compounds that bind to the OBPs. This binding triggers a conformational change that the sensor translates into a <b>measurable electrical signal</b>, sent in real time to the grower's management system.",
+    destacat: "The sensor detects the fungus BEFORE the damage is visible to the naked eye — it is early detection, not late diagnosis.",
+    suggeriments: ["OBP receptor proteins","volatile compounds fungus","electrical signal transduction"]
+  },
+  {
+    paraules: ["obp","proteïna","proteines","olfactory","binding","protein","insecte","antena","receptor","unió","conformació","lligand","recombinant","disseny"],
+    titol: "OBP Proteins (Olfactory Binding Proteins)",
+    cos: "The <b>Olfactory Binding Proteins (OBPs)</b> are proteins found in insect antennae that capture and transport odour molecules to the olfactory receptors. Our team has designed <em class='terme'>recombinant</em> OBPs with specificity towards the characteristic volatile compounds of <em>Erysiphe necator</em>. Upon binding to the compound, the OBP changes conformation (3D folding), generating a detectable signal.",
+    destacat: "Key to the project: we mimic nature. Insects have been detecting odours with extremely high sensitivity and selectivity for millions of years.",
+    suggeriments: ["volatile compounds fungus","how does the biosensor work","DBTL engineering"]
+  },
+  {
+    paraules: ["volàtil","volatils","compostos","aroma","olor","molècula","cov","hexanol","hexanal","terpè","cariofile","ppb","química","empremta","quimica"],
+    titol: "Volatile Compounds of Erysiphe necator",
+    cos: "When <em>Erysiphe necator</em> colonises the vine, it emits a specific profile of <b>volatile organic compounds (VOCs)</b>: mainly <em class='terme'>1-hexanol</em>, <em class='terme'>hexanal</em>, and certain fungal terpenes such as β-caryophyllene. These compounds differ from those emitted by the healthy plant, allowing the detection of active infection versus pathogen absence.",
+    destacat: "The fungus's 'chemical fingerprint' is unique and detectable at parts per billion (ppb) concentrations, long before visual symptoms appear.",
+    suggeriments: ["OBP receptor proteins","how does the biosensor work","powdery mildew erysiphe"]
+  },
+  {
+    paraules: ["resistència","fungicida","sofre","tractament","control","quimic","pesticides","ibe","sdhi","fitotoxicitat","ecològic","ecologia"],
+    titol: "Fungicide Resistance and Limitations of Current Control",
+    cos: "Conventional powdery mildew control faces two major problems: (1) <b>genetic resistance</b> of the fungus to IBE (ergosterol biosynthesis inhibitors) and SDHI families, reducing the efficacy of systemic fungicides. (2) <b>Catalan organic farming</b> relies on sulphur, but heatwaves (&gt;35°C) cause phytotoxicity and damage the vine, creating forced periods of inactivity precisely during high-risk moments.",
+    destacat: "Result: growers must apply preventive treatments without knowing whether the fungus is present, driving up production costs.",
+    suggeriments: ["economic impact wine harvest","how does the biosensor work","climate change temperature"]
+  },
+  {
+    paraules: ["econòmic","economia","cost","pèrdua","collita","producció","benefici","marge","vi","cava","viticultor","rendibilitat","diners","preu"],
+    titol: "Economic Impact on Catalan Viticulture",
+    cos: "Powdery mildew is the disease that generates the <b>highest costs and uncertainty</b> in the Catalan wine sector. In severe attacks, crop loss can be total. But the damage is not only quantitative: the fungus breaks the grape skin and generates unpleasant volatile compounds that <em class='terme'>render the fruit unsuitable</em> for the production of DO wines and cavas. The cost of repeated preventive treatments, fuel, and monitoring represents a significant increase in operating costs.",
+    destacat: "Our biosensor allows a shift from 'treat just in case' to 'act where and when there is infection', optimising resources and margins.",
+    suggeriments: ["fungicide resistance sulphur","sustainability precision agriculture","powdery mildew erysiphe"]
+  },
+  {
+    paraules: ["clima","climàtic","temperatura","calor","hivern","supervivència","miceli","cicle","escalfament","primavera","infecció","global"],
+    titol: "Climate Change and Powdery Mildew",
+    cos: "Rising average temperatures in Catalonia are altering the biological cycle of <em>Erysiphe necator</em>. Milder winters reduce the mortality of mycelium and cleistothecia, resulting in <b>earlier and more aggressive primary infections</b> in spring. Additionally, extreme heatwaves limit the use of sulphur (phytotoxicity), creating a double risk: the fungus is active but standard treatments cannot be applied.",
+    destacat: "Climate paradox: the hotter it gets, the less we can treat with the main organic product, and the fungus takes advantage of exactly this window.",
+    suggeriments: ["fungicide resistance sulphur","how does the biosensor work","economic impact wine harvest"]
+  },
+  {
+    paraules: ["sostenibilitat","ecologia","medi","ambient","optimització","precisió","ods","emissions","agricultura","preventius","recursos"],
+    titol: "Agricultural Optimisation and Sustainability",
+    cos: "Early detection enables a paradigm shift: <b>precision agriculture</b>. Instead of systematic preventive treatments, action is taken only where the sensor confirms the presence of the fungus. This reduces the amount of phytosanitary products applied, machinery fuel, and associated CO₂ emissions. The project contributes to the UN SDGs, particularly SDG 2 (Zero Hunger), SDG 12 (Responsible Consumption and Production), and SDG 13 (Climate Action).",
+    destacat: "Fewer treatments → lower costs → less environmental impact → cleaner wine. Everyone benefits.",
+    suggeriments: ["economic impact wine harvest","climate change temperature","fungicide resistance sulphur"]
+  },
+  {
+    paraules: ["igem","competició","concurs","biologia","sintètica","equip","urv","universitat","tarragona","wiki","synthetic","biology","projecte"],
+    titol: "iGEM URV 2025 Project",
+    cos: "The <b>iGEM URV</b> team (Universitat Rovira i Virgili, Tarragona) participates in the international synthetic biology competition <em class='terme'>iGEM 2025</em>. Our project applies the tools of synthetic biology — protein design, genetic engineering, and biosensor electronics — to solve a real and local problem: the management of powdery mildew in Catalan viticulture. The wiki contains all documentation: laboratory, model, human practices, and contributions to the scientific community.",
+    destacat: "Viticulture is Catalonia's most emblematic agricultural sector. Protecting it with our own technology is an act of scientific and cultural responsibility.",
+    suggeriments: ["how does the biosensor work","volatile compounds fungus","OBP receptor proteins"]
+  },
+  {
+    paraules: ["transducció","senyal","electric","elèctric","electrodes","amperometria","transductor","resposta","impedància","potenciometria","bluetooth","lora","wireless","alerta"],
+    titol: "Biochemical Signal Transduction",
+    cos: "The OBP–volatile compound detection is transduced into an <b>electrical signal</b> via an electrochemical transducer. The conformational change of the OBP upon binding to the ligand alters the impedance of the sensor surface. This impedance variation is measured by <em class='terme'>amperometry</em> or <em class='terme'>potentiometry</em>. The analogue signal is digitised and transmitted via a wireless module (Bluetooth/LoRa) to the farm management system.",
+    destacat: "From the field to the mobile in real time: the grower receives a geolocated alert indicating which vineyard sector presents infection risk.",
+    suggeriments: ["how does the biosensor work","OBP receptor proteins","volatile compounds fungus"]
+  },
+  {
+    paraules: ["enginyeria","disseny","dbtl","build","test","learn","iteració","clonació","expressió","construir","provar","aprendre","metodologia","cicle"],
+    titol: "Engineering Cycles (DBTL)",
+    cos: "The project follows the synthetic engineering methodology <b>DBTL</b> (Design – Build – Test – Learn). In the <em class='terme'>Design</em> phase, we select and model candidate OBPs. In the <em class='terme'>Build</em> phase, we express the protein in heterologous systems (<em>E. coli</em> or yeast). In the <em class='terme'>Test</em> phase, we validate binding to the ligand by fluorescence (FRET) and ITC. Finally, we <em class='terme'>Learn</em> from each iteration to optimise affinity and selectivity.",
+    destacat: "Each DBTL cycle brings us closer to a functional sensor under real field conditions.",
+    suggeriments: ["OBP receptor proteins","volatile compounds fungus","how does the biosensor work"]
+  }
+];
+
+
+const paraulesIgnorades = new Set(["com","que","els","les","del","dels","una","uns","unes","per","amb","sobre","quins","quines","quin","quina","molt","però","és","el","la","un","de","i","a","en","no","un","ens","ho","hi","seu","seva","tot","tots","tota","totes","han","hem","heu","era","eren","ser","ha","fas","fan","fer","pot","poden","puc","pots","vol","vull","volen","cal","the","is","are","how","what","does","do","it","in","of","and","to","a","an"]);
+
+baseDades.forEach(entrada => {
+  const textNet = entrada.cos.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+  entrada._text = (entrada.paraules.join(' ') + ' ' + entrada.titol + ' ' + textNet)
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+});
+
+function normalitzar(text) {
+  return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function trossejar(text) {
+  return normalitzar(text)
+    .replace(/[.,?!;:'"«»()]/g,' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !paraulesIgnorades.has(w));
+}
+
+function cercar(pregunta) {
+  const trossos = trossejar(pregunta);
+  if (!trossos.length) return [];
+  return baseDades
+    .map(entrada => {
+      const coincidencies = trossos.filter(t => entrada._text.includes(t)).length;
+      return { entrada, coincidencies };
+    })
+    .filter(r => r.coincidencies > 0)
+    .sort((a, b) => b.coincidencies - a.coincidencies);
+}
+
+// CHAT
+
+const zonaEl  = document.getElementById('missatges');
+const campEl  = document.getElementById('campText');
+
+setTimeout(() => {
+  afegirMissatgeBot({
+    titol: "Welcome to the OïdiSense Expert System",
+    cos: "I am the expert agent for the iGEM URV 2025–2026 project. You can ask me about <b>powdery mildew</b> (<em class='terme'>Erysiphe necator</em>), our <b>OBP protein-based biosensor</b>, <b>Catalan viticulture</b>, volatile compounds, economic impact, climate change, or any aspect of the project.",
+    destacat: "Try: «How does the biosensor work?» or «Which compounds does the sensor detect?»",
+    suggeriments: ["how does the biosensor work","OBP receptor proteins","economic impact wine harvest"]
+  });
+}, 300);
+
+function enviarMissatge() {
+  const text = campEl.value.trim();
+  if (!text) return;
+  afegirMissatgeUsuari(text);
+  campEl.value = '';
+  mostrarEscrivint();
+  setTimeout(() => {
+    amagarEscrivint();
+    const resultats = cercar(text);
+    if (!resultats.length) {
+      afegirMissatgeBot({
+        titol: "No answer found",
+        cos: "I don't have specific information about <em>«" + netejarHtml(text) + "»</em>. Try rephrasing or use the topic buttons.",
+        destacat: null,
+        suggeriments: ["how does the biosensor work","powdery mildew erysiphe","volatile compounds fungus"]
+      });
+      return;
+    }
+    const millor = resultats[0].entrada;
+    afegirMissatgeBot({ titol: millor.titol, cos: millor.cos, destacat: millor.destacat, suggeriments: millor.suggeriments });
+  }, 500 + Math.random() * 300);
+}
+
+function afegirMissatgeUsuari(text) {
+  const bloc = document.createElement('div');
+  bloc.className = 'missatge usuari';
+  bloc.innerHTML = `<div class="avatar-missatge"></div><div class="bombolla">${netejarHtml(text)}</div>`;
+  zonaEl.appendChild(bloc);
+  anarAvall();
+}
+
+function afegirMissatgeBot({ titol, cos, destacat, suggeriments }) {
+  const bloc = document.createElement('div');
+  bloc.className = 'missatge bot';
+  const htmlDestacat = destacat ? `<div class="destacat">${destacat}</div>` : '';
+  const htmlSuggeriments = (suggeriments||[]).length
+    ? `<div class="fila-suggeriments">${suggeriments.map(s=>`<span class="boto-suggeriment" onclick="preguntaRapida('${s.replace(/'/g,"\\'")}')"> ${s}</span>`).join('')}</div>`
+    : '';
+  bloc.innerHTML = `<div class="avatar-missatge"></div><div class="bombolla"><strong>${titol}</strong>${cos}${htmlDestacat}${htmlSuggeriments}</div>`;
+  zonaEl.appendChild(bloc);
+  anarAvall();
+}
+
+let blocEscrivint = null;
+function mostrarEscrivint() {
+  blocEscrivint = document.createElement('div');
+  blocEscrivint.className = 'missatge bot';
+  blocEscrivint.innerHTML = `<div class="avatar-missatge"></div><div class="punts-escrivint"><span></span><span></span><span></span></div>`;
+  zonaEl.appendChild(blocEscrivint);
+  anarAvall();
+}
+function amagarEscrivint() { if (blocEscrivint) { blocEscrivint.remove(); blocEscrivint = null; } }
+function preguntaRapida(text) { campEl.value = text; enviarMissatge(); }
+function anarAvall() { zonaEl.scrollTop = zonaEl.scrollHeight; }
+function netejarHtml(text) { return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+campEl.addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); enviarMissatge(); } });
+</script>
+</body>
+</html>
