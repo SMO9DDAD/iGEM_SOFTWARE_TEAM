@@ -1,0 +1,20 @@
+obp_name,species,smiles,kd_nm,source,tanimoto
+CpinPBP2,Choristoneura pinus,CCCCCC(C=C)O,1870,iobpdb / Compound_OBP_binding.csv,1.0
+CpinGOBP1,Choristoneura pinus,CCCCCC(C=C)O,3730,iobpdb / Compound_OBP_binding.csv,1.0
+SmosOBP12,Spodoptera mossuamedes,CCCCCC(C=C)O,5290,iobpdb / Compound_OBP_binding.csv,1.0
+MsepCSP5,Manduca sexta,CCCCCC(C=C)O,6430,iobpdb / Compound_OBP_binding.csv,1.0
+CquiOBP5,Culex quinquefasciatus,CCCCCC(C=C)O,8100,iobpdb / Compound_OBP_binding.csv,1.0
+SmosOBP11,Spodoptera mossuamedes,CCCCCC(C=C)O,9160,iobpdb / Compound_OBP_binding.csv,1.0
+LsatOBP13,Lucilia sericata,CCCCCC(C=C)O,11170,iobpdb / Compound_OBP_binding.csv,1.0
+NlugCSP3,Nilaparvata lugens,CCCCCC(C=C)O,14060,iobpdb / Compound_OBP_binding.csv,1.0
+SmosOBP16,Spodoptera mossuamedes,CCCCCC(C=C)O,14700,iobpdb / Compound_OBP_binding.csv,1.0
+NlugCSP10,Nilaparvata lugens,CCCCCC(C=C)O,17160,iobpdb / Compound_OBP_binding.csv,1.0
+NlugCSP8,Nilaparvata lugens,CCCCCC(C=C)O,19370,iobpdb / Compound_OBP_binding.csv,1.0
+SaveOBP9,Spodoptera avicula,CCCCCC(C=C)O,21530,iobpdb / Compound_OBP_binding.csv,1.0
+CmedPBP4,Chironomus medius,CCCCCC(C=C)O,24630,iobpdb / Compound_OBP_binding.csv,1.0
+HoblOBP4,Helicoverpa obliqua,CCCCCC(C=C)O,29400,iobpdb / Compound_OBP_binding.csv,1.0
+SmosOBP17,Spodoptera mossuamedes,CCCCCC(C=C)O,31880,iobpdb / Compound_OBP_binding.csv,1.0
+BhorOBPm2,Bombyx horta,CCCCCC(C=C)O,39060,iobpdb / Compound_OBP_binding.csv,1.0
+HoblCSP1,Helicoverpa obliqua,CCCCCC(C=C)O,48080,iobpdb / Compound_OBP_binding.csv,1.0
+HoblOBP2,Helicoverpa obliqua,CCCCCC(C=C)O,49950,iobpdb / Compound_OBP_binding.csv,1.0
+BhorOBPm2 Y50F,Bombyx horta,CCCCCC(C=C)O,208330,iobpdb / Compound_OBP_binding.csv,1.0
