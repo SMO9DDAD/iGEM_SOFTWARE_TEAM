@@ -1,6 +1,0 @@
-obp_name,species,kd_nm_experimental,docking_score_kcal,score_norm,kd_norm,score_combinat
-CpinPBP2,Choristoneura pinus,1870,-5.483,1.0,1.0,1.0
-CpinGOBP1,Choristoneura pinus,3730,-5.42,0.9587426326129668,0.7014446227929374,0.83
-SmosOBP12,Spodoptera mossuamedes,5290,-4.342,0.2527832351015061,0.4510433386837881,0.352
-MsepCSP5,Manduca sexta,6430,-4.084,0.08382449246889305,0.2680577849117175,0.176
-CquiOBP5,Culex quinquefasciatus,8100,-3.956,-0.0,0.0,0.0
