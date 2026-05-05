@@ -1,0 +1,7 @@
+# VOCs interferents comuns a la vinya
+# Línies amb # o buides s'ignoren
+limonene
+linalool
+hexanal
+benzaldehyde
+1-hexanol
