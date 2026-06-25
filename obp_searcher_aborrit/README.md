@@ -1,4 +1,4 @@
-# OBP Finder — Canvis V2
+# OBP Finder: Canvis V2
 
 ![Example Image](1.png)
 
