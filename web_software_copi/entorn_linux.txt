@@ -1,0 +1,8 @@
+wsl --install
+wsl --install -d Ubuntu
+
+obre la terminal i posa "wsl" clica enter
+ copia el contingut del arxiu "run.txt" has de canviar la ruta a la carpeta webapp, recorda que la ruta s'ha de posar en Linux.
+
+
+obre el navegador i escriu: http://localhost:5051

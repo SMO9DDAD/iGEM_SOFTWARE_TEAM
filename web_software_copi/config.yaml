@@ -1,0 +1,46 @@
+
+
+fitxers:
+  binding_csv: "Compound_OBP_binding.csv"
+  info_csv:    "OBP_info_new.csv"
+  carpeta_results: "results"
+  carpeta_docking:  "docking"
+  registre_docking: "docking/registre.csv"
+  cache_smiles:     "docking/voc_smiles_cache.json"
+
+executables:
+  gnina_exe:  "gnina/gnina"
+  p2rank_exe: "p2rank/prank"
+
+urls:
+  pubchem_smiles: "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{}/property/IsomericSMILES/JSON"
+  iobpdb_pdb:     "https://raw.githubusercontent.com/sshuklz/iobpdb_app/master/alpha_pdbs/{}.pdb"
+  uniprot_search: "https://rest.uniprot.org/uniprotkb/search?query={}&format=json&size=1"
+  uniprot_fasta:  "https://www.uniprot.org/uniprot/{}.fasta"
+  esmfold:        "https://api.esmatlas.com/foldSequence/v1/pdb/"
+
+docking:
+  exhaustiveness: 16
+  num_modes: 9
+  box_with_pocket: 26      
+  box_fallback: 30         #
+  p2rank_min_score: 10     
+  esmfold_max_len: 400     
+  timeout_p2rank_s: 120
+  timeout_gnina_s: 600
+
+ranking:
+  best_obp_type: "Classic OBP"
+  best_cys_num: 6
+  big_ki_value_um: 1000.0
+  selectivity_tau: 10.0
+  pesos_defecte:
+    w_affinity: 0.45
+    w_selectivity: 0.25
+    w_stability: 0.15
+    w_promiscuity: 0.15
+
+seguretat:
+
+  avis_docking_massiu: 5
+  minuts_estimats_per_docking: 3
