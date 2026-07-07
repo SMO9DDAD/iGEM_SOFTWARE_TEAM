@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<title>OBP Pipeline</title>
+</head>
+<body>
+
+<h2>OBP Pipeline — iGEM URV 2025</h2>
+<hr>
+
+<b>Directori del projecte:</b><br>
+<input id="project-dir" type="text" size="60" placeholder="/mnt/c/Users/.../OBP_searcher_final">
+<button onclick="checkDir()">Verificar</button>
+<br><span id="dir-status"></span>
+
+<br><br>
+<b>Mòdul:</b><br>
+<select id="module-select">
+  <option value="main">main_nou.py — Ranking OBP per VOC + docking integrat</option>
+  <option value="consulta">main_consulta.py — Consulta ràpida d'afinitat (VOC↔OBP, amb fallback a docking GNINA)</option>
+  <option value="main4">main4_nou.py — Mutagènesi dirigida FoldX + docking (independent)</option>
+</select>
+
+<br><br>
+<button onclick="runModule()" id="btn-run">▶ Executar</button>
+<button onclick="stopRun()" id="btn-stop" style="display:none">■ Aturar</button>
+<button onclick="clearTerminal()">Netejar</button>
+
+<hr>
+
+<pre id="terminal" style="background:#111;color:#eee;padding:10px;height:500px;overflow-y:auto;font-size:13px;"></pre>
+
+<div id="input-bar" style="display:none">
+  <b id="input-prompt"></b><br>
+  <input id="input-field" type="text" size="50" placeholder="Escriu la resposta...">
+  <button onclick="sendInput()">Enviar ↵</button>
+</div>
+
+<br>
+<span id="status">Preparat</span>
+
+<script>
+let currentSid = null;
+let currentSSE = null;
+let running    = false;
+let waiting    = false;
+
+function term(text) {
+  const t = document.getElementById("terminal");
+  t.textContent += text + "\n";
+  t.scrollTop = t.scrollHeight;
+}
+
+async function checkDir() {
+  const dir = document.getElementById("project-dir").value.trim();
+  const res  = await fetch("/api/check_dir", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({path: dir})
+  });
+  const data = await res.json();
+  const el   = document.getElementById("dir-status");
+  if (!data.ok) { el.textContent = "✗ " + (data.error || "Directori no vàlid"); return; }
+  const n = Object.values(data.scripts).filter(Boolean).length;
+  el.textContent = "✓ " + n + " de 3 scripts trobats";
+}
+
+document.getElementById("project-dir").addEventListener("keydown", e => {
+  if (e.key === "Enter") checkDir();
+});
+
+async function runModule() {
+  const dir = document.getElementById("project-dir").value.trim();
+  const mod = document.getElementById("module-select").value;
+  if (!dir) { alert("Introdueix el directori primer."); return; }
+
+  running = true;
+  document.getElementById("btn-run").disabled = true;
+  document.getElementById("btn-stop").style.display = "";
+  document.getElementById("status").textContent = "Executant...";
+  term("\n▶ Iniciant " + mod + " (" + dir + ")\n");
+
+  const res  = await fetch("/api/run", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({module: mod, project_dir: dir})
+  });
+  const data = await res.json();
+  if (data.error) { term("✗ " + data.error); finishRun(1); return; }
+
+  currentSid = data.session_id;
+  const sse  = new EventSource("/api/stream/" + currentSid);
+  currentSSE = sse;
+
+  sse.onmessage = ev => {
+    const msg = JSON.parse(ev.data);
+    if (msg.type === "ping")   return;
+    if (msg.type === "log")    { term(msg.text); return; }
+    if (msg.type === "prompt") { term(msg.text); showInput(msg.text); return; }
+    if (msg.type === "done")   { hideInput(); finishRun(msg.code); sse.close(); return; }
+    if (msg.type === "error")  { term("✗ " + msg.text); finishRun(1); sse.close(); return; }
+  };
+  sse.onerror = () => { hideInput(); finishRun(-1); sse.close(); };
+}
+
+function finishRun(code) {
+  running = false;
+  document.getElementById("btn-run").disabled = false;
+  document.getElementById("btn-stop").style.display = "none";
+  document.getElementById("status").textContent = code === 0 ? "✓ Finalitzat" : "✗ Error (codi " + code + ")";
+  if (code === 0) term("\n✓ Procés acabat correctament");
+  else            term("\n✗ Procés acabat amb error (codi " + code + ")");
+}
+
+async function stopRun() {
+  if (currentSid) await fetch("/api/kill/" + currentSid, {method:"POST"});
+  if (currentSSE) { currentSSE.close(); currentSSE = null; }
+  hideInput();
+  term("\n■ Aturat per l'usuari.");
+  finishRun(-1);
+}
+
+function clearTerminal() {
+  document.getElementById("terminal").textContent = "";
+}
+
+function showInput(prompt) {
+  waiting = true;
+  document.getElementById("input-prompt").textContent = prompt;
+  document.getElementById("input-bar").style.display = "";
+  document.getElementById("input-field").value = "";
+  document.getElementById("input-field").focus();
+  document.getElementById("status").textContent = "Esperant resposta...";
+}
+
+function hideInput() {
+  waiting = false;
+  document.getElementById("input-bar").style.display = "none";
+}
+
+async function sendInput() {
+  const val = document.getElementById("input-field").value;
+  term("  » " + val);
+  hideInput();
+  await fetch("/api/input", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({session_id: currentSid, text: val})
+  });
+  document.getElementById("status").textContent = "Executant...";
+}
+
+document.getElementById("input-field").addEventListener("keydown", e => {
+  if (e.key === "Enter") sendInput();
+});
+</script>
+</body>
+</html>
