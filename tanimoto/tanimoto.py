@@ -1,106 +1,56 @@
 
+# Builds the VOC x VOC Tanimoto similarity matrix from SMILES strings.
+# Reads the binding table + compound info CSV, computes Morgan fingerprints
+# for every VOC, and saves the pairwise Tanimoto similarity matrix plus its
+# CAS-number index to disk (used later by tanimoto_impute.py).
 
-import os
 import json
-import time
-import requests
-import pandas as pd
+import os
+
 import numpy as np
-from pathlib import Path
+import pandas as pd
 
 from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit import DataStructs
 from rdkit import RDLogger
-RDLogger.DisableLog('rdApp.*')   
+RDLogger.DisableLog('rdApp.*')  # silence RDKit's noisy parsing warnings
+
+import tanimoto_impute as ti
+
+# Input files
+BINDING_FILE = "Compound_OBP_binding.csv"
+COMPOUND_INFO_FILE = "Compound_info (1).csv"
+# Output files (matrix + index used to look up a VOC's row/column by CAS number)
+OUT_MATRIX_FILE = "tanimoto_data/tanimoto_matrix.npy"
+OUT_INDEX_FILE = "tanimoto_data/voc_index.json"
+OUT_MISSING_FILE = "tanimoto_data/voc_sense_smiles.csv"
+
+# Morgan (ECFP-like) fingerprint parameters
+MORGAN_RADIUS = 2
+MORGAN_NBITS = 2048
+
+MORGAN_GEN = rdFingerprintGenerator.GetMorganGenerator(radius=MORGAN_RADIUS, fpSize=MORGAN_NBITS)
+
+os.makedirs("tanimoto_data", exist_ok=True)
 
 
-BINDING_FILE     = "Compound_OBP_binding.csv"
-CACHE_FILE       = "docking/voc_smiles_cache.json"
-OUT_MATRIX_FILE  = "docking/tanimoto_matrix.npy"
-OUT_INDEX_FILE   = "docking/voc_index.json"
-OUT_MISSING_FILE = "docking/voc_sense_smiles.csv"
-
-MORGAN_RADIUS    = 2
-MORGAN_NBITS     = 2048
-
-os.makedirs("docking", exist_ok=True)
-
-
-PUBCHEM_URL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
-
-
-def _pubchem_resolve(identifier, max_retries=3, wait=2):
-
-    for intent in range(max_retries):
-        try:
-            url_cid = f"{PUBCHEM_URL}/compound/name/{requests.utils.quote(str(identifier))}/cids/JSON"
-            r = requests.get(url_cid, timeout=10)
-
-            if r.status_code == 404:
-                return None  # nom no existeix a PubChem, no té sentit reintentar
-            r.raise_for_status()
-            cid = r.json()["IdentifierList"]["CID"][0]
-
-            url_props = (f"{PUBCHEM_URL}/compound/cid/{cid}/property/"
-                         f"IsomericSMILES,CanonicalSMILES/JSON")
-            r2 = requests.get(url_props, timeout=10)
-            r2.raise_for_status()
-            props = r2.json()["PropertyTable"]["Properties"][0]
-
-            smiles = (props.get("IsomericSMILES")
-                      or props.get("CanonicalSMILES")
-                      or props.get("SMILES")
-                      or props.get("ConnectivitySMILES"))
-            return smiles
-
-        except (requests.exceptions.RequestException, KeyError, IndexError, ValueError):
-            time.sleep(wait * (intent + 1))  # backoff progressiu abans de reintentar
-            continue
-
-    return None
-
-
-def resolve_smiles_for_compound(cas, compound_name, cache):
-
-    cas_key = str(cas).strip()
-
-    if cas_key in cache and cache[cas_key]:
-        return cache[cas_key]
-
-    smiles = None
-
-
-    sinonims = [s.strip() for s in str(compound_name).split("/") if s.strip()]
-
-    for nom in sinonims:
-        smiles = _pubchem_resolve(nom)
-        if smiles:
-            break
-
-    if not smiles:
-        smiles = _pubchem_resolve(cas_key)
-
-    if smiles:
-        cache[cas_key] = smiles
-
-    return smiles
-
-
-#  FINGERPRINTS I TANIMOTO 
+#  FINGERPRINTS AND TANIMOTO SIMILARITY
 
 def build_fingerprint(smiles):
-
+    # Convert a single SMILES string into a Morgan fingerprint bit vector.
+    # Returns None if the SMILES is missing/empty or fails to parse.
     if not smiles:
         return None
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         return None
-    return AllChem.GetMorganFingerprintAsBitVect(mol, MORGAN_RADIUS, nBits=MORGAN_NBITS)
+    return MORGAN_GEN.GetFingerprint(mol)
 
 
 def build_tanimoto_matrix(fingerprints):
-
+    # Compute the full pairwise Tanimoto similarity matrix for a list of
+    # fingerprints. Entries involving a missing (None) fingerprint stay NaN.
     n = len(fingerprints)
     matrix = np.full((n, n), np.nan, dtype=np.float32)
 
@@ -109,6 +59,7 @@ def build_tanimoto_matrix(fingerprints):
 
     for count, i in enumerate(valid_idx, 1):
         fp_i = fingerprints[i]
+        # Bulk similarity: compare fingerprint i against all valid fingerprints at once
         sims = DataStructs.BulkTanimotoSimilarity(
             fp_i, [fingerprints[j] for j in valid_idx]
         )
@@ -136,26 +87,18 @@ def main():
     cas_col, name_col = df.columns[0], df.columns[1]
     print(f"  {len(df)} VOCs trobats")
 
-
-    cache = {}
-    if os.path.isfile(CACHE_FILE):
-        with open(CACHE_FILE, "r", encoding="utf-8") as f:
-            cache = json.load(f)
-        print(f"   Caché de SMILES carregada: {len(cache)} entrades existents")
-    else:
-        print(f"   No hi ha caché prèvia, es crearà '{CACHE_FILE}'")
-
-    print(f"\n  Resolent SMILES (caché  PubChem CID→propietats, per sinònim → per CAS)...")
-    cas_list, name_list, smiles_list = [], [], []
-    sense_smiles = []
+    # Look up each VOC's SMILES string by CAS number from the compound info file
+    compound_info_smiles, info_path = ti.load_compound_info_smiles(COMPOUND_INFO_FILE)
+    print(f"\n  Usant {info_path} com a font única de SMILES...")
+    cas_list, smiles_list = [], []
+    sense_smiles = []  # VOCs for which no SMILES could be resolved
 
     for idx, row in df.iterrows():
-        cas  = row[cas_col]
+        cas = str(row[cas_col]).strip()
         name = row[name_col]
-        smiles = resolve_smiles_for_compound(cas, name, cache)
+        smiles = compound_info_smiles.get(cas)
 
-        cas_list.append(str(cas).strip())
-        name_list.append(name)
+        cas_list.append(cas)
         smiles_list.append(smiles)
 
         status = "ok" if smiles else "no"
@@ -165,11 +108,7 @@ def main():
         if not smiles:
             sense_smiles.append({"CAS-number": cas, "Compound name": name})
 
-    # Desa caché actualitzada (perquè properes execucions siguin instantànies)
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(cache, f, indent=2, ensure_ascii=False)
-    print(f"\n   Caché de SMILES desada a {CACHE_FILE} ({len(cache)} entrades)")
-
+    # Save the list of VOCs that couldn't be resolved for manual review
     if sense_smiles:
         pd.DataFrame(sense_smiles).to_csv(OUT_MISSING_FILE, index=False)
         print(f"   {len(sense_smiles)} VOCs sense SMILES resolt → {OUT_MISSING_FILE}")
@@ -180,7 +119,7 @@ def main():
     n_ok = sum(1 for fp in fingerprints if fp is not None)
     print(f"  → {n_ok}/{len(fingerprints)} fingerprints generats correctament")
 
-
+    # Build the full similarity matrix and persist it alongside its CAS index
     matrix = build_tanimoto_matrix(fingerprints)
 
     np.save(OUT_MATRIX_FILE, matrix)
